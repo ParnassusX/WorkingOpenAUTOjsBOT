@@ -1,0 +1,2 @@
+Test write file created at: " + new Date().toString() + "
+This file is used to test file writing capabilities.

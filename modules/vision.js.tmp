@@ -1,0 +1,150 @@
+/**
+     * Detects special game events like missions, bonus rounds, and power-up activations
+     * @param {Image} img - Captured screen image
+     * @param {number} width - Screen width
+     * @param {number} height - Screen height
+     * @return {Array} Array of detected special events
+     */
+    detectSpecialEvents: function(img, width, height) {
+        var events = [];
+        
+        try {
+            // Check for mission activation
+            var missionRegion = [width * 0.1, height * 0.1, width * 0.8, height * 0.2];
+            if (this.findColorInRegion(img, "#FFFF00", missionRegion, 40)) {
+                events.push({
+                    type: "mission",
+                    timestamp: Date.now()
+                });
+            }
+            
+            // Check for bonus round activation (typically bright flashing effects)
+            var bonusRegion = [0, 0, width, height * 0.3];
+            var bonusColors = ["#FFFFFF", "#FFFF00", "#00FFFF"];
+            
+            for (var i = 0; i < bonusColors.length; i++) {
+                if (this.findColorDensityInRegion(img, bonusColors[i], bonusRegion, 40, 0.2)) { // 20% density threshold
+                    events.push({
+                        type: "bonus_round",
+                        timestamp: Date.now()
+                    });
+                    break;
+                }
+            }
+            
+            // Check for power-up activation animations
+            var powerupActivationRegion = [width * 0.3, height * 0.3, width * 0.4, height * 0.4];
+            var powerupColors = ["#00FFFF", "#FF00FF", "#FFFF00"];
+            
+            for (var j = 0; j < powerupColors.length; j++) {
+                if (this.findColorDensityInRegion(img, powerupColors[j], powerupActivationRegion, 40, 0.15)) {
+                    var powerupType = "unknown";
+                    
+                    // Determine powerup type based on color
+                    if (j === 0) powerupType = "hoverboard";
+                    else if (j === 1) powerupType = "magnet";
+                    else if (j === 2) powerupType = "jetpack";
+                    
+                    events.push({
+                        type: "powerup_activation",
+                        powerup: powerupType,
+                        timestamp: Date.now()
+                    });
+                    break;
+                }
+            }
+            
+            // Check for game speed change (typically indicated by visual effects)
+            var speedChangeRegion = [0, height * 0.4, width, height * 0.2];
+            var blurDetected = this.detectMotionBlur(img, speedChangeRegion);
+            
+            if (blurDetected) {
+                events.push({
+                    type: "speed_change",
+                    timestamp: Date.now()
+                });
+            }
+            
+            // Check for special character abilities activation
+            var characterAbilityRegion = [width * 0.4, height * 0.7, width * 0.2, height * 0.2];
+            var abilityColors = ["#FF0000", "#00FF00", "#0000FF"];
+            
+            for (var k = 0; k < abilityColors.length; k++) {
+                if (this.findColorInRegion(img, abilityColors[k], characterAbilityRegion, 40)) {
+                    events.push({
+                        type: "character_ability",
+                        timestamp: Date.now()
+                    });
+                    break;
+                }
+            }
+        } catch (e) {
+            console.error("Error detecting special events: " + e.message);
+        }
+        
+        return events;
+    },
+    
+    /**
+     * Detects motion blur in a region to identify speed changes
+     * @param {Image} img - Captured screen image
+     * @param {Array} region - Region to analyze [x, y, width, height]
+     * @return {boolean} True if motion blur detected
+     */
+    detectMotionBlur: function(img, region) {
+        try {
+            // Simplified motion blur detection by analyzing color variance
+            // In a full implementation, would use more sophisticated algorithms
+            var sampleSize = 20;
+            var colorVariances = [];
+            
+            // Sample horizontal lines for color variance
+            for (var y = region[1]; y < region[1] + region[3]; y += region[3]/4) {
+                var lineColors = [];
+                
+                for (var x = region[0]; x < region[0] + region[2]; x += region[2]/sampleSize) {
+                    var pixel = images.pixel(img, x, y);
+                    lineColors.push(pixel);
+                }
+                
+                // Calculate color variance along the line
+                var variance = this.calculateColorVariance(lineColors);
+                colorVariances.push(variance);
+            }
+            
+            // Calculate average variance
+            var avgVariance = 0;
+            for (var i = 0; i < colorVariances.length; i++) {
+                avgVariance += colorVariances[i];
+            }
+            avgVariance /= colorVariances.length;
+            
+            // High variance indicates sharp edges, low variance indicates blur
+            return avgVariance < 1000; // Threshold for blur detection
+        } catch (e) {
+            console.error("Error detecting motion blur: " + e.message);
+            return false;
+        }
+    },
+    
+    /**
+     * Calculates color variance in an array of colors
+     * @param {Array} colors - Array of color values
+     * @return {number} Variance value
+     */
+    calculateColorVariance: function(colors) {
+        if (!colors || colors.length === 0) return 0;
+        
+        // Extract RGB components
+        var redValues = [];
+        var greenValues = [];
+        var blueValues = [];
+        
+        for (var i = 0; i < colors.length; i++) {
+            redValues.push(colors.red(colors[i]));
+            greenValues.push(colors.green(colors[i]));
+            blueValues.push(colors.blue(colors[i]));
+        }
+        
+        // Calculate variances
+        var redVariance = this.calculateVariance(redValues, this.calculateAverage(re
