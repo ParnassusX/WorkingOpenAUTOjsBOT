@@ -14,6 +14,12 @@ var utils = require('./utils.js');
 var cpuOptimizer = require('./cpu_optimizer.js');
 var memoryOptimizer = require('./memory_optimizer.js');
 
+// Import timing optimization library
+const TimingOptimizer = require('timing-optimizer');
+
+// Initialize timing optimizer for click timing
+var clickTimingOptimizer = new TimingOptimizer({targetWindow: 50});
+
 // Performance metrics tracking
 var performanceMetrics = {
     frameProcessingTimes: [],     // Array of recent frame processing times in ms
@@ -493,3 +499,20 @@ module.exports = {
         return regionOfInterest;
     }
 };
+
+// Optimize click timing to match game's input window
+module.exports = {
+    optimizeClickTiming: function(config) {
+        console.log("Optimizing click timing...");
+
+        // Get current timing settings
+        var currentTiming = config.gameplay.clickTiming || 100;
+
+        // Optimize timing using the optimizer
+        var optimizedTiming = clickTimingOptimizer.optimize(currentTiming);
+
+        console.log("Optimized click timing: " + optimizedTiming + "ms");
+
+        return optimizedTiming;
+    },
+}

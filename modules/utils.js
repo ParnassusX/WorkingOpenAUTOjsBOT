@@ -12,6 +12,8 @@ var emulatorBasePath = "/storage/emulated/0/SubwayBot/";
 // Import duplicate detector utility
 var duplicateDetector = require('./utils/duplicate_detector.js');
 
+const cv = require('opencv4nodejs');
+
 module.exports = {
     /**
      * Detects code duplications in the project
@@ -796,10 +798,16 @@ module.exports = {
     
     findColorInRegion: function(img, color, region, threshold) {
         try {
+            if (config.debug) {
+                console.log("Searching for color " + color + " in region " + JSON.stringify(region) + " with threshold " + threshold);
+            }
             var point = images.findColor(img, color, {
                 region: region,
-                threshold: threshold
+                threshold: threshold || 4
             });
+            if (config.debug) {
+                console.log("Color search result: " + (point !== null ? "FOUND" : "NOT FOUND"));
+            }
             return point !== null;
         } catch (e) {
             console.error("Error finding color: " + e.message);
@@ -812,3 +820,30 @@ module.exports = {
         this.saveTrainingDataWithVerification(gameState, action, config);
     }
 };
+
+// Kalman Filter Prediction for Movement Tracking
+class TargetTracker {
+    constructor() {
+        this.kalman = new cv.KalmanFilter(4, 2);
+        this.kalman.measurementMatrix = cv.Mat.eye(2, 4, cv.CV_32F);
+        this.kalman.processNoiseCov = cv.Mat.eye(4, 4, cv.CV_32F).mul(1e-4);
+    }
+
+    predictNextPosition(currentPos) {
+        const prediction = this.kalman.predict();
+        return { x: prediction.at(0), y: prediction.at(1) };
+    }
+}
+
+// Optimized Click Timing
+const { performance } = require('perf_hooks');
+const { sleep } = require('system-sleep');
+
+function optimizedClick(x, y) {
+    const start = performance.now();
+    press(x, y);
+    while (performance.now() - start < 22) {
+        sleep(0.5); // 0.5ms precision via kernel timer
+    }
+    release(x, y);
+}

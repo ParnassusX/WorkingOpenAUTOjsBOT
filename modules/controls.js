@@ -55,6 +55,15 @@ var gestureRecording = {
     isPlaying: false
 };
 
+// Import Kalman filter library for predictive movement tracking
+const KalmanFilter = require('kalmanjs');
+
+// Initialize Kalman filter for swipe gesture prediction
+var swipeKalmanFilter = new KalmanFilter({R: 0.01, Q: 3});
+
+// Initialize Kalman filter for tap gesture prediction
+var tapKalmanFilter = new KalmanFilter({R: 0.01, Q: 3});
+
 module.exports = {
     /**
      * Initialize the controls module with the current screen dimensions
@@ -123,18 +132,18 @@ module.exports = {
      */
     performSwipe: function(direction, config) {
         console.log("Performing swipe: " + direction);
-        
+    
         // Update screen dimensions if needed
         this.updateScreenDimensions();
-        
+    
         // Calculate start and end coordinates based on direction
         var startX, startY, endX, endY;
         var swipeDistance = Math.floor(screenCache.width * timingCalibration.swipeDistance);
-        
+    
         // Default to center of screen for starting position
         startX = screenCache.centerX;
         startY = screenCache.centerY;
-        
+    
         // Calculate end position based on direction
         switch (direction.toLowerCase()) {
             case "left":
@@ -146,22 +155,10 @@ module.exports = {
                 endY = startY;
                 break;
             case "up":
-                // In Subway Surfers, up swipe is for jumping
                 endX = startX;
                 endY = startY - swipeDistance;
                 break;
             case "down":
-                // In Subway Surfers, down swipe is for rolling
-                endX = startX;
-                endY = startY + swipeDistance;
-                break;
-            case "jump":
-                // Alias for up swipe
-                endX = startX;
-                endY = startY - swipeDistance;
-                break;
-            case "roll":
-                // Alias for down swipe
                 endX = startX;
                 endY = startY + swipeDistance;
                 break;
@@ -169,26 +166,30 @@ module.exports = {
                 console.error("Invalid swipe direction: " + direction);
                 return false;
         }
-        
+    
+        // Predict end position using Kalman filter
+        endX = swipeKalmanFilter.filter(endX);
+        endY = swipeKalmanFilter.filter(endY);
+    
         // Ensure coordinates are within screen bounds
         endX = Math.max(0, Math.min(endX, screenCache.width - 1));
         endY = Math.max(0, Math.min(endY, screenCache.height - 1));
-        
+    
         // Get swipe duration from config or calibration
         var duration = config && config.gameplay && config.gameplay.swipeDuration ?
                       config.gameplay.swipeDuration : timingCalibration.swipeDuration;
-        
+    
         try {
             // Perform the swipe gesture
             var result = swipe(startX, startY, endX, endY, duration);
-            
+    
             // Record the action timestamp for calibration
             var actionTime = Date.now();
             this.recordAction(direction, actionTime);
-            
+    
             console.log("Swipe completed: " + direction + " (" + startX + "," + startY + ") to (" + 
                       endX + "," + endY + ") over " + duration + "ms");
-            
+    
             return result;
         } catch (e) {
             console.error("Swipe failed: " + e.message);
