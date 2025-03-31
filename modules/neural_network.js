@@ -6,7 +6,33 @@
 
 // Import required modules
 var utils = require('./utils.js');
-var files = require('files');
+
+// Try to import files module with fallback implementation
+var files;
+try {
+    files = require('files');
+    console.log("Files module loaded successfully in neural network module");
+} catch (e) {
+    console.log("Files module not available in neural network module: " + e.message);
+    // Create a minimal fallback implementation
+    files = {
+        exists: function(path) {
+            console.log("[Files Fallback] Checking if exists: " + path);
+            return false; // Default to false in fallback
+        },
+        read: function(path) {
+            console.log("[Files Fallback] Attempting to read: " + path);
+            return null; // Return null in fallback
+        },
+        write: function(path, content) {
+            console.log("[Files Fallback] Attempting to write to: " + path);
+            return false; // Return false in fallback
+        },
+        cwd: function() {
+            return "/storage/emulated/0/SubwayBot/"; // Default path
+        }
+    };
+}
 
 // Neural network configuration
 var networkConfig = {

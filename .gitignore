@@ -21,3 +21,16 @@ build/
 *.njsproj
 *.sln
 *.sw?
+
+# Bot specific files
+/screenshots/
+/data/
+/training_data/
+/model/
+/test_reports/
+/error_screenshots/
+/stats/
+/logs/
+/sessions/
+/actions/
+*.json

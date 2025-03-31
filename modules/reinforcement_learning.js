@@ -7,7 +7,34 @@
 // Import required modules
 var utils = require('./utils.js');
 var neuralNetwork = require('./neural_network.js');
-var files = require('files');
+
+// Try to import files module with fallback implementation
+var files;
+try {
+    files = require('files');
+    console.log("Files module loaded successfully in reinforcement learning module");
+} catch (e) {
+    console.log("Files module not available in reinforcement learning module: " + e.message);
+    // Create a minimal fallback implementation
+    files = {
+        exists: function(path) {
+            console.log("[Files Fallback] Checking if exists: " + path);
+            return false; // Default to false in fallback
+        },
+        read: function(path) {
+            console.log("[Files Fallback] Attempting to read: " + path);
+            return null; // Return null in fallback
+        },
+        write: function(path, content) {
+            console.log("[Files Fallback] Attempting to write to: " + path);
+            return false; // Return false in fallback
+        },
+        createWithDirs: function(path) {
+            console.log("[Files Fallback] Attempting to create directory: " + path);
+            return false; // Return false in fallback
+        }
+    };
+}
 
 // Reinforcement learning configuration
 var rlConfig = {
