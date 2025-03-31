@@ -5,51 +5,194 @@
 var currentDir = files.cwd();
 console.log("Current directory: " + currentDir);
 
-// Import all modules using absolute paths for reliable resolution
-var config = require('./config.js');
-var uiModule = require('./modules/ui.js');
-var vision = require('./modules/vision.js');
-var brain = require('./modules/brain.js');
-var utils = require('./modules/utils.js');
-var gameElements = require('./modules/gameElements.js');
-var neuralNetwork = require('./modules/neural_network.js');
-var reinforcementLearning = require('./modules/reinforcement_learning.js');
-var controls = require('./modules/controls.js');
-var performanceOptimization = require('./modules/performance_optimization.js');
-var dataCollection = require('./modules/data_collection.js');
-var trainingUI = require('./modules/training_ui.js');
-var uiInteraction = require('./modules/ui_interaction.js');
-var basicDecision = require('./modules/basic_decision.js');
-var dataProcessing = require('./modules/data_processing.js');
+// Detect environment and set appropriate base path
+function detectEnvironment() {
+    var possiblePaths = [
+        "/storage/emulated/0/SubwayBot/",
+        "/sdcard/SubwayBot/",
+        "/sdcard/Android/data/org.autojs.autojs/files/project/SubwayBot/",
+        "/storage/emulated/0/Android/data/org.autojs.autojs/files/project/SubwayBot/",
+        currentDir + "/"
+    ];
+    
+    console.log("Detecting environment from possible paths:");
+    for (var i = 0; i < possiblePaths.length; i++) {
+        console.log("Checking path: " + possiblePaths[i]);
+        try {
+            // Check if config.js exists at this path
+            if (files.exists(possiblePaths[i] + "config.js")) {
+                console.log("✓ Environment detected: " + possiblePaths[i]);
+                
+                // Verify we can also read the file (not just check existence)
+                try {
+                    var content = files.read(possiblePaths[i] + "config.js");
+                    if (content && content.length > 0) {
+                        console.log("✓ Successfully read config.js from: " + possiblePaths[i]);
+                        return possiblePaths[i];
+                    }
+                } catch (readErr) {
+                    console.log("✗ Found config.js but couldn't read it: " + readErr.message);
+                }
+            } else {
+                console.log("✗ config.js not found at: " + possiblePaths[i]);
+                
+                // Try to create the directory if it doesn't exist
+                try {
+                    if (!files.exists(possiblePaths[i])) {
+                        files.createWithDirs(possiblePaths[i] + "test_write.txt");
+                        console.log("Created test file at: " + possiblePaths[i]);
+                        files.remove(possiblePaths[i] + "test_write.txt");
+                    }
+                } catch (createErr) {
+                    console.log("Cannot create directory at: " + possiblePaths[i] + ", error: " + createErr.message);
+                }
+            }
+        } catch (e) {
+            console.log("✗ Path check failed for: " + possiblePaths[i] + ", error: " + e.message);
+        }
+    }
+    
+    // Default to emulator path if detection fails
+    console.log("⚠ Environment detection failed, using default path");
+    return "/storage/emulated/0/SubwayBot/";
+}
+
+// Set the base path for the application
+var basePath = detectEnvironment();
+
+// First, import the path resolver to handle module paths correctly
+var pathResolver;
+try {
+    // Try relative path first
+    pathResolver = require('./modules/utils/path_resolver.js');
+} catch (e) {
+    console.log("Trying absolute path for path_resolver: " + e.message);
+    // Try absolute path with detected base path
+    pathResolver = require(basePath + 'modules/utils/path_resolver.js');
+}
+
+// Set the base path in the path resolver
+if (pathResolver && typeof pathResolver.setBasePath === 'function') {
+    pathResolver.setBasePath(basePath);
+    console.log("Path resolver base path set to: " + pathResolver.getBasePath());
+}
+
+// Function to safely require modules with path resolution
+function safeRequire(modulePath) {
+    var errors = [];
+    
+    // Try direct path with detected base path FIRST (prioritize absolute paths)
+    try {
+        // Convert relative path to absolute using detected base path
+        var absolutePath = modulePath;
+        if (modulePath.startsWith('./')) {
+            absolutePath = basePath + modulePath.substring(2);
+        } else if (!modulePath.startsWith('/')) {
+            absolutePath = basePath + modulePath;
+        }
+        console.log("Trying absolute path first: " + absolutePath);
+        return require(absolutePath);
+    } catch (e) {
+        errors.push("Absolute path error: " + e.message);
+        console.log("Absolute path failed for " + modulePath + ": " + e.message);
+    }
+    
+    // Try path resolver next
+    try {
+        if (pathResolver && typeof pathResolver.resolveModulePath === 'function') {
+            var resolvedPath = pathResolver.resolveModulePath(modulePath);
+            console.log("Trying resolved path: " + resolvedPath);
+            return require(resolvedPath);
+        }
+    } catch (e) {
+        errors.push("Path resolver error: " + e.message);
+        console.log("Path resolver failed for " + modulePath + ": " + e.message);
+    }
+    
+    // Try relative path as last resort
+    try {
+        console.log("Trying relative path as fallback: " + modulePath);
+        return require(modulePath);
+    } catch (e) {
+        errors.push("Relative path error: " + e.message);
+        console.log("Relative path failed for " + modulePath + ": " + e.message);
+    }
+    
+    // If all methods fail, throw a comprehensive error
+    throw new Error("Failed to load module '" + modulePath + "' using all methods. Errors: " + errors.join('; '));
+}
+
+// Import all modules using safe require for reliable resolution
+var config = safeRequire('./config.js');
+var uiModule = safeRequire('./modules/ui.js');
+var vision = safeRequire('./modules/vision.js');
+var brain = safeRequire('./modules/brain.js');
+var utils = safeRequire('./modules/utils.js');
+var gameElements = safeRequire('./modules/gameElements.js');
+var neuralNetwork = safeRequire('./modules/neural_network.js');
+var reinforcementLearning = safeRequire('./modules/reinforcement_learning.js');
+var controls = safeRequire('./modules/controls.js');
+var performanceOptimization = safeRequire('./modules/performance_optimization.js');
+var dataCollection = safeRequire('./modules/data_collection.js');
+var trainingUI = safeRequire('./modules/training_ui.js');
+var uiInteraction = safeRequire('./modules/ui_interaction.js');
+var basicDecision = safeRequire('./modules/basic_decision.js');
+var dataProcessing = safeRequire('./modules/data_processing.js');
 
 // Import reliability modules (Phase 6.3)
-var crashRecovery = require('./modules/reliability/crash_recovery.js');
-var errorDetection = require('./modules/reliability/error_detection.js');
-var performanceMonitor = require('./modules/reliability/performance_monitor.js');
+var crashRecovery = safeRequire('./modules/reliability/crash_recovery.js');
+var errorDetection = safeRequire('./modules/reliability/error_detection.js');
+var performanceMonitor = safeRequire('./modules/reliability/performance_monitor.js');
 
 // Alternative imports if above fails
 try {
     if (typeof config === 'undefined') {
-        console.log("Trying alternative import method...");
-        // Try absolute paths as fallback
+        console.log("Trying alternative import method using path resolver...");
+        // Set the base path for the emulator environment
+        if (pathResolver && typeof pathResolver.setBasePath === 'function') {
+            pathResolver.setBasePath('/storage/emulated/0/SubwayBot/');
+            console.log("Base path set to: " + pathResolver.getBasePath());
+        }
+        
+        // Try using path resolver to get absolute paths
+        config = require(pathResolver.resolveModulePath('config.js'));
+        uiModule = require(pathResolver.resolveModulePath('modules/ui.js'));
+        vision = require(pathResolver.resolveModulePath('modules/vision.js'));
+        brain = require(pathResolver.resolveModulePath('modules/brain.js'));
+        utils = require(pathResolver.resolveModulePath('modules/utils.js'));
+        gameElements = require(pathResolver.resolveModulePath('modules/gameElements.js'));
+        neuralNetwork = require(pathResolver.resolveModulePath('modules/neural_network.js'));
+        reinforcementLearning = require(pathResolver.resolveModulePath('modules/reinforcement_learning.js'));
+        controls = require(pathResolver.resolveModulePath('modules/controls.js'));
+        performanceOptimization = require(pathResolver.resolveModulePath('modules/performance_optimization.js'));
+        dataCollection = require(pathResolver.resolveModulePath('modules/data_collection.js'));
+        trainingUI = require(pathResolver.resolveModulePath('modules/training_ui.js'));
+        uiInteraction = require(pathResolver.resolveModulePath('modules/ui_interaction.js'));
+        basicDecision = require(pathResolver.resolveModulePath('modules/basic_decision.js'));
+        dataProcessing = require(pathResolver.resolveModulePath('modules/data_processing.js'));
+    }
+} catch (e) {
+    console.error("Alternative import failed: " + e.message);
+    console.error("Stack trace: " + e.stack);
+    
+    // Final fallback - try direct hardcoded paths as last resort
+    try {
+        console.log("Attempting final fallback with hardcoded paths...");
         config = require('/storage/emulated/0/SubwayBot/config.js');
         uiModule = require('/storage/emulated/0/SubwayBot/modules/ui.js');
         vision = require('/storage/emulated/0/SubwayBot/modules/vision.js');
         brain = require('/storage/emulated/0/SubwayBot/modules/brain.js');
         utils = require('/storage/emulated/0/SubwayBot/modules/utils.js');
         gameElements = require('/storage/emulated/0/SubwayBot/modules/gameElements.js');
-        neuralNetwork = require('/storage/emulated/0/SubwayBot/modules/neural_network.js');
-        reinforcementLearning = require('/storage/emulated/0/SubwayBot/modules/reinforcement_learning.js');
-        controls = require('/storage/emulated/0/SubwayBot/modules/controls.js');
-        performanceOptimization = require('/storage/emulated/0/SubwayBot/modules/performance_optimization.js');
-        dataCollection = require('/storage/emulated/0/SubwayBot/modules/data_collection.js');
-        trainingUI = require('/storage/emulated/0/SubwayBot/modules/training_ui.js');
-        uiInteraction = require('/storage/emulated/0/SubwayBot/modules/ui_interaction.js');
-        basicDecision = require('/storage/emulated/0/SubwayBot/modules/basic_decision.js');
-        dataProcessing = require('/storage/emulated/0/SubwayBot/modules/data_processing.js');
+        // Only load essential modules in final fallback
+        console.log("Loaded essential modules with hardcoded paths");
+    } catch (finalError) {
+        console.error("CRITICAL: All import methods failed. Bot cannot start.");
+        console.error(finalError.message);
+        console.error(finalError.stack);
+        // Alert user with a toast message
+        toast("Critical error: Cannot load modules. Check logs.");
     }
-} catch (e) {
-    console.error("Alternative import failed: " + e.message);
 }
 
 // Log successful imports

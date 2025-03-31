@@ -18,14 +18,37 @@ module.exports = {
         // Use provided base path or default to emulator base path
         var base = basePath || emulatorBasePath;
         
-        // Handle paths that are already absolute
+        // Handle paths that are already absolute for Android
         if (relativePath.startsWith('/')) {
             return relativePath;
+        }
+        
+        // Handle Windows-style absolute paths (convert to Android format)
+        if (relativePath.match(/^[a-zA-Z]:\\/) || relativePath.match(/^[a-zA-Z]:\//) || relativePath.startsWith('\\')) {
+            console.log("Converting Windows path to Android format: " + relativePath);
+            // Extract just the filename or last part of the path
+            var parts = relativePath.split(/[\\\/]/);
+            var filename = parts[parts.length - 1];
+            
+            // Check if it's a module path
+            if (parts.includes('modules')) {
+                var moduleIndex = parts.indexOf('modules');
+                var modulePath = parts.slice(moduleIndex).join('/');
+                return emulatorBasePath + modulePath;
+            }
+            
+            return emulatorBasePath + filename;
         }
         
         // Handle relative paths
         if (relativePath.startsWith('./')) {
             relativePath = relativePath.substring(2);
+        }
+        
+        // Handle module paths without ./ prefix
+        if (relativePath.includes('modules/') && !relativePath.startsWith('modules/')) {
+            var modulesParts = relativePath.split('modules/');
+            relativePath = 'modules/' + modulesParts[modulesParts.length - 1];
         }
         
         // Ensure base path ends with a slash

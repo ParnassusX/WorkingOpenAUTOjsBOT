@@ -15,7 +15,21 @@ var cpuOptimizer = require('./cpu_optimizer.js');
 var memoryOptimizer = require('./memory_optimizer.js');
 
 // Import timing optimization library
-const TimingOptimizer = require('timing-optimizer');
+var TimingOptimizer;
+try {
+    TimingOptimizer = require('timing-optimizer');
+    console.log("Timing optimizer loaded successfully in performance module");
+} catch (e) {
+    console.log("Timing optimizer not available in performance module: " + e.message);
+    // Create a minimal fallback implementation
+    TimingOptimizer = function(options) {
+        return {
+            optimize: function(timing) {
+                return timing; // Just return the input timing as-is
+            }
+        };
+    };
+}
 
 // Initialize timing optimizer for click timing
 var clickTimingOptimizer = new TimingOptimizer({targetWindow: 50});

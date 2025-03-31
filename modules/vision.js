@@ -19,6 +19,23 @@ var images = require('./utils/images');
 var gameElements = require('./gameElements.js');
 var utils = require('./utils.js');
 
+// Try to import timing optimization library if available
+var TimingOptimizer;
+try {
+    TimingOptimizer = require('timing-optimizer');
+    console.log("Timing optimizer loaded successfully");
+} catch (e) {
+    console.log("Timing optimizer not available: " + e.message);
+    // Create a minimal fallback implementation
+    TimingOptimizer = function(options) {
+        return {
+            optimize: function(timing) {
+                return timing; // Just return the input timing as-is
+            }
+        };
+    };
+}
+
 // Try to import OCR module if available
 var ocr = null;
 try {
@@ -44,8 +61,54 @@ var learnedPatterns = {
     lastUpdate: Date.now()
 };
 
-// Import OpenCV.js for GPU-accelerated template matching
-const cv = require('opencv4nodejs');
+// Create a fallback for performance timing if not available from utils
+var performance;
+try {
+    // First try to use performance from utils if available
+    if (utils.performance) {
+        performance = utils.performance;
+        console.log("Using performance from utils module");
+    } else {
+        // Try to load perf_hooks (works in Node.js environments)
+        const perfHooks = require('perf_hooks');
+        performance = perfHooks.performance;
+        console.log("Successfully loaded perf_hooks in vision module");
+    }
+} catch (e) {
+    // Fallback implementation for AutoJS environment
+    console.log("Performance timing not available in vision module, using fallback implementation: " + e.message);
+    performance = {
+        now: function() {
+            return Date.now(); // Use Date.now() as fallback
+        }
+    };
+}
+
+// Import OpenCV.js for GPU-accelerated template matching if available
+var cv;
+try {
+    cv = require('opencv4nodejs');
+    console.log("OpenCV loaded successfully");
+} catch (e) {
+    console.log("OpenCV not available: " + e.message);
+    // Create a minimal fallback implementation with basic functions
+    cv = {
+        // Basic image processing functions
+        imread: function(path) {
+            console.log("Using fallback imread");
+            return images.read(path);
+        },
+        imwrite: function(path, img) {
+            console.log("Using fallback imwrite");
+            return images.save(img, path);
+        },
+        // Add other necessary fallback functions as needed
+        matchTemplate: function() {
+            console.log("Using fallback matchTemplate");
+            return { minMaxLoc: { maxLoc: { x: 0, y: 0 } } };
+        }
+    };
+}
 
 module.exports = {
     /**
