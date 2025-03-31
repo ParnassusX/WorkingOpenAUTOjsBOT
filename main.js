@@ -6,46 +6,47 @@ var currentDir = files.cwd();
 console.log("Current directory: " + currentDir);
 
 // Import all modules using absolute paths for reliable resolution
-var config = require('/storage/emulated/0/SubwayBot/config.js');
-var uiModule = require('/storage/emulated/0/SubwayBot/modules/ui.js');
-var vision = require('/storage/emulated/0/SubwayBot/modules/vision.js');
-var brain = require('/storage/emulated/0/SubwayBot/modules/brain.js');
-var utils = require('/storage/emulated/0/SubwayBot/modules/utils.js');
-var gameElements = require('/storage/emulated/0/SubwayBot/modules/gameElements.js');
-var neuralNetwork = require('/storage/emulated/0/SubwayBot/modules/neural_network.js');
-var reinforcementLearning = require('/storage/emulated/0/SubwayBot/modules/reinforcement_learning.js');
-var controls = require('/storage/emulated/0/SubwayBot/modules/controls.js');
-var performanceOptimization = require('/storage/emulated/0/SubwayBot/modules/performance_optimization.js');
-var dataCollection = require('/storage/emulated/0/SubwayBot/modules/data_collection.js');
-var trainingUI = require('/storage/emulated/0/SubwayBot/modules/training_ui.js');
-var uiInteraction = require('/storage/emulated/0/SubwayBot/modules/ui_interaction.js');
-var basicDecision = require('/storage/emulated/0/SubwayBot/modules/basic_decision.js');
-var dataProcessing = require('/storage/emulated/0/SubwayBot/modules/data_processing.js');
+var config = require('./config.js');
+var uiModule = require('./modules/ui.js');
+var vision = require('./modules/vision.js');
+var brain = require('./modules/brain.js');
+var utils = require('./modules/utils.js');
+var gameElements = require('./modules/gameElements.js');
+var neuralNetwork = require('./modules/neural_network.js');
+var reinforcementLearning = require('./modules/reinforcement_learning.js');
+var controls = require('./modules/controls.js');
+var performanceOptimization = require('./modules/performance_optimization.js');
+var dataCollection = require('./modules/data_collection.js');
+var trainingUI = require('./modules/training_ui.js');
+var uiInteraction = require('./modules/ui_interaction.js');
+var basicDecision = require('./modules/basic_decision.js');
+var dataProcessing = require('./modules/data_processing.js');
 
 // Import reliability modules (Phase 6.3)
-var crashRecovery = require('/storage/emulated/0/SubwayBot/modules/reliability/crash_recovery.js');
-var errorDetection = require('/storage/emulated/0/SubwayBot/modules/reliability/error_detection.js');
-var performanceMonitor = require('/storage/emulated/0/SubwayBot/modules/reliability/performance_monitor.js');
+var crashRecovery = require('./modules/reliability/crash_recovery.js');
+var errorDetection = require('./modules/reliability/error_detection.js');
+var performanceMonitor = require('./modules/reliability/performance_monitor.js');
 
 // Alternative imports if above fails
 try {
     if (typeof config === 'undefined') {
         console.log("Trying alternative import method...");
-        config = require('./config.js');
-        uiModule = require('./modules/ui.js');
-        vision = require('./modules/vision.js');
-        brain = require('./modules/brain.js');
-        utils = require('./modules/utils.js');
-        gameElements = require('./modules/gameElements.js');
-        neuralNetwork = require('./modules/neural_network.js');
-        reinforcementLearning = require('./modules/reinforcement_learning.js');
-        controls = require('./modules/controls.js');
-        performanceOptimization = require('./modules/performance_optimization.js');
-        dataCollection = require('./modules/data_collection.js');
-        trainingUI = require('./modules/training_ui.js');
-        uiInteraction = require('./modules/ui_interaction.js');
-        basicDecision = require('./modules/basic_decision.js');
-        dataProcessing = require('./modules/data_processing.js');
+        // Try absolute paths as fallback
+        config = require('/storage/emulated/0/SubwayBot/config.js');
+        uiModule = require('/storage/emulated/0/SubwayBot/modules/ui.js');
+        vision = require('/storage/emulated/0/SubwayBot/modules/vision.js');
+        brain = require('/storage/emulated/0/SubwayBot/modules/brain.js');
+        utils = require('/storage/emulated/0/SubwayBot/modules/utils.js');
+        gameElements = require('/storage/emulated/0/SubwayBot/modules/gameElements.js');
+        neuralNetwork = require('/storage/emulated/0/SubwayBot/modules/neural_network.js');
+        reinforcementLearning = require('/storage/emulated/0/SubwayBot/modules/reinforcement_learning.js');
+        controls = require('/storage/emulated/0/SubwayBot/modules/controls.js');
+        performanceOptimization = require('/storage/emulated/0/SubwayBot/modules/performance_optimization.js');
+        dataCollection = require('/storage/emulated/0/SubwayBot/modules/data_collection.js');
+        trainingUI = require('/storage/emulated/0/SubwayBot/modules/training_ui.js');
+        uiInteraction = require('/storage/emulated/0/SubwayBot/modules/ui_interaction.js');
+        basicDecision = require('/storage/emulated/0/SubwayBot/modules/basic_decision.js');
+        dataProcessing = require('/storage/emulated/0/SubwayBot/modules/data_processing.js');
     }
 } catch (e) {
     console.error("Alternative import failed: " + e.message);

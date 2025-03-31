@@ -1,5 +1,6 @@
 const cv = require('opencv4nodejs');
-const { sleep } = require('system-sleep');
+// Remove system-sleep dependency and use AutoJS's built-in sleep function
+// const { sleep } = require('system-sleep');
 const { gestureHistory } = require('./utils');
 const duplicateDetector = require('./utils/duplicate_detector');
 
