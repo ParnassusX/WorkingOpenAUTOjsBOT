@@ -184,3 +184,29 @@ This roadmap outlines the development plan for creating a production-ready Subwa
 
 ## Conclusion
 This roadmap provides a comprehensive plan for developing a production-ready Subway Surfers bot. By following this structured approach and completing each milestone, the project will result in a robust, efficient, and adaptable bot capable of both training from human gameplay and autonomous operation.
+
+## Future Enhancements
+
+To further improve the Subway Surfers Bot, the following core steps are recommended:
+
+1. **Enhance Vision and Detection Systems**
+   - Integrate advanced image recognition techniques to improve obstacle and item detection.
+   - Implement machine learning models for dynamic environment adaptation.
+
+2. **Optimize Performance**
+   - Refactor code for better CPU and memory efficiency.
+   - Implement asynchronous processing where applicable to reduce latency.
+
+3. **Improve Decision-Making Algorithms**
+   - Develop more sophisticated AI models for decision-making.
+   - Integrate reinforcement learning for adaptive gameplay strategies.
+
+4. **Expand Capabilities**
+   - Enable the bot to handle more complex game scenarios and missions.
+   - Add support for new game features and updates.
+
+5. **Code Quality and Maintenance**
+   - Conduct regular code reviews to ensure adherence to best practices.
+   - Enhance documentation and comments for better maintainability.
+
+These enhancements aim to make the bot more robust, efficient, and capable of handling a wider range of gameplay scenarios.
