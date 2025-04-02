@@ -11,7 +11,7 @@ var keyboardControlsActive = false;
 var emulatorBasePath = "/storage/emulated/0/SubwayBot/";
 
 // Import duplicate detector utility
-
+var duplicateHandler = require('./duplicateHandler.js');
 
 // Optimized Click Timing
 // Create a fallback for perf_hooks since it's not available in AutoJS
@@ -58,4 +58,61 @@ function optimizedClick(x, y) {
         sleep(1); // Use 1ms sleep as minimum in AutoJS
     }
     release(x, y);
+}
+
+/**
+ * Prepares the environment for the bot to run
+ * Creates necessary directories and verifies paths
+ * @param {Object} config - Configuration settings
+ */
+exports.prepareEnvironment = function(config) {
+    console.log("Preparing environment for bot...");
+    
+    // Verify and update paths if needed
+    duplicateHandler.verifyAndUpdatePaths(config);
+    
+    // Create required directories
+    var requiredDirs = [
+        config.training.dataPath,
+        config.training.trainingPath,
+        config.training.screenshotPath,
+        config.training.dataPath + "logs/",
+        config.training.dataPath + "sessions/",
+        config.training.dataPath + "stats/",
+        config.training.dataPath + "error_screenshots/",
+        config.training.dataPath + "actions/"
+    ];
+    
+    // Add model directory if neural network is enabled
+    if (config.neuralNet && config.neuralNet.modelPath) {
+        requiredDirs.push(config.neuralNet.modelPath);
+    }
+    
+    // Create each directory
+    var dirResults = [];
+    for (var i = 0; i < requiredDirs.length; i++) {
+        var result = duplicateHandler.ensureDirectory(requiredDirs[i]);
+        dirResults.push({
+            path: requiredDirs[i],
+            created: result
+        });
+    }
+    
+    // Log results
+    console.log("Directory creation results:");
+    for (var j = 0; j < dirResults.length; j++) {
+        console.log(dirResults[j].path + ": " + (dirResults[j].created ? "✓" : "✗"));
+    }
+    
+    console.log("Environment preparation complete");
+    return true;
+};
+
+/**
+ * Ensures a directory exists, creating it if necessary
+ * @param {string} path - Directory path to ensure
+ * @return {boolean} True if directory exists or was created
+ */
+exports.ensureDirectory = function(path) {
+    return duplicateHandler.ensureDirectory(path);
 }
